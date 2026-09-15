@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>MP4 to MP3 Converter</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f2f5f9;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.10);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 25px;
+        }
+
+        .upload {
+            border: 2px dashed #777;
+            border-radius: 15px;
+            padding: 35px 15px;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .upload-icon {
+            font-size: 45px;
+        }
+
+        .upload h3 {
+            margin: 10px 0;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        #fileInfo {
+            display: none;
+            margin-top: 20px;
+            padding: 15px;
+            background: #f5f5f5;
+            border-radius: 12px;
+        }
+
+        #fileName {
+            font-weight: bold;
+            word-break: break-word;
+        }
+
+        #fileSize {
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .remove {
+            margin-top: 10px;
+            padding: 8px 14px;
+            border: none;
+            border-radius: 8px;
+            background: #e53935;
+            color: white;
+        }
+
+        label {
+            display: block;
+            margin-top: 20px;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        select {
+            width: 100%;
+            padding: 13px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            font-size: 16px;
+        }
+
+        #convertBtn {
+            width: 100%;
+            margin-top: 25px;
+            padding: 15px;
+            border: none;
+            border-radius: 12px;
+            background: #111;
+            color: white;
+            font-size: 17px;
+            font-weight: bold;
+        }
+
+        #convertBtn:disabled {
+            opacity: 0.5;
+        }
+
+        #status {
+            text-align: center;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="card">
+
+        <h1>MP4 to MP3 Converter</h1>
+
+        <p class="subtitle">
+            Convert your MP4 video into MP3 audio
+        </p>
+
+        <div class="upload" id="uploadBox">
+
+            <div class="upload-icon">🎬</div>
+
+            <h3>Select MP4 Video</h3>
+
+            <p>Tap here to choose your MP4 file</p>
+
+            <input
+                type="file"
+                id="fileInput"
+                accept=".mp4,video/mp4"
+            >
+
+        </div>
+
+
+        <div id="fileInfo">
+
+            <div id="fileName"></div>
+
+            <div id="fileSize"></div>
+
+            <button
+                class="remove"
+                id="removeBtn"
+            >
+                Remove File
+            </button>
+
+        </div>
+
+
+        <label for="quality">
+            MP3 Quality
+        </label>
+
+        <select id="quality">
+
+            <option value="128">128 kbps</option>
+
+            <option value="192" selected>
+                192 kbps
+            </option>
+
+            <option value="256">256 kbps</option>
+
+            <option value="320">320 kbps</option>
+
+        </select>
+
+
+        <button
+            id="convertBtn"
+            disabled
+        >
+            Convert to MP3
+        </button>
+
+
+        <div id="status"></div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+const uploadBox = document.getElementById("uploadBox");
+
+const fileInput = document.getElementById("fileInput");
+
+const fileInfo = document.getElementById("fileInfo");
+
+const fileName = document.getElementById("fileName");
+
+const fileSize = document.getElementById("fileSize");
+
+const removeBtn = document.getElementById("removeBtn");
+
+const convertBtn = document.getElementById("convertBtn");
+
+const quality = document.getElementById("quality");
+
+const status = document.getElementById("status");
+
+let selectedFile = null;
+
+
+// Open file picker
+uploadBox.addEventListener("click", function() {
+
+    fileInput.click();
+
+});
+
+
+// File selected
+fileInput.addEventListener("change", function() {
+
+    if (fileInput.files.length === 0) {
+        return;
+    }
+
+    const file = fileInput.files[0];
+
+    if (!file.name.toLowerCase().endsWith(".mp4")) {
+
+        status.textContent =
+            "Please select an MP4 file.";
+
+        status.style.color = "red";
+
+        fileInput.value = "";
+
+        return;
+    }
+
+    selectedFile = file;
+
+    fileName.textContent =
+        "File: " + file.name;
+
+    fileSize.textContent =
+        "Size: " + formatSize(file.size);
+
+    fileInfo.style.display = "block";
+
+    convertBtn.disabled = false;
+
+    status.textContent =
+        "MP4 file selected.";
+
+    status.style.color = "green";
+
+});
+
+
+// Remove file
+removeBtn.addEventListener("click", function() {
+
+    selectedFile = null;
+
+    fileInput.value = "";
+
+    fileInfo.style.display = "none";
+
+    convertBtn.disabled = true;
+
+    status.textContent = "";
+
+});
+
+
+// Convert
+convertBtn.addEventListener("click", async function() {
+
+    if (!selectedFile) {
+        return;
+    }
+
+    convertBtn.disabled = true;
+
+    status.textContent =
+        "Converting... Please wait.";
+
+    status.style.color = "#333";
+
+
+    const formData = new FormData();
+
+    formData.append("file", selectedFile);
+
+    formData.append("quality", quality.value);
+
+
+    try {
+
+        const response = await fetch(
+            "/convert",
+            {
+                method: "POST",
+                body: formData
+            }
+        );
+
+
+        if (!response.ok) {
+
+            let message = "Conversion failed.";
+
+            try {
+
+                const data = await response.json();
+
+                if (data.error) {
+                    message = data.error;
+                }
+
+            } catch (e) {}
+
+            throw new Error(message);
+        }
+
+
+        const blob = await response.blob();
+
+
+        const url =
+            window.URL.createObjectURL(blob);
+
+        const link =
+            document.createElement("a");
+
+        link.href = url;
+
+        link.download =
+            "converted.mp3";
+
+        document.body.appendChild(link);
+
+        link.click();
+
+        link.remove();
+
+        window.URL.revokeObjectURL(url);
+
+
+        status.textContent =
+            "Conversion complete! MP3 downloaded.";
+
+        status.style.color = "green";
+
+
+    } catch (error) {
+
+        status.textContent =
+            "Error: " + error.message;
+
+        status.style.color = "red";
+
+    }
+
+
+    convertBtn.disabled = false;
+
+});
+
+
+// File size
+function formatSize(bytes) {
+
+    if (bytes < 1024) {
+        return bytes + " Bytes";
+    }
+
+    if (bytes < 1024 * 1024) {
+        return (bytes / 1024).toFixed(2) + " KB";
+    }
+
+    if (bytes < 1024 * 1024 * 1024) {
+        return (bytes / (1024 * 1024)).toFixed(2) + " MB";
+    }
+
+    return (bytes / (1024 * 1024 * 1024)).toFixed(2) + " GB";
+
+}
+
+</script>
+
+</body>
+</html>
